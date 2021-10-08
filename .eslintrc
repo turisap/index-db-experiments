@@ -2,6 +2,7 @@
   "parser": "@typescript-eslint/parser",
   "plugins": ["@typescript-eslint", "react-hooks", "simple-import-sort"],
   "extends": [
+    "prettier",
     "plugin:react/recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended"
@@ -15,6 +16,7 @@
   },
   "rules": {
     "curly": "error",
+    "prettier/prettier": "error",
     "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/no-empty-function": "off",
     "@typescript-eslint/ban-ts-comment": "warn",
@@ -22,11 +24,14 @@
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-object-literal-type-assertion": "off",
+    "@typescript-eslint/no-unused-vars": "error",
+    "@typescript-eslint/no-unused-vars-experimental": "error",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "error",
     "react/display-name": "warn",
     "react/prop-types": "off",
-    "no-console": ["error"],
+    "no-console": "warn",
+    "no-unused-vars": ["error", { "vars": "all", "args": "all", "ignoreRestSiblings": false }],
     "simple-import-sort/imports": [
       "error",
       {
@@ -42,7 +47,12 @@
         ]
       }
     ],
-    "simple-import-sort/exports": "error"
+    "simple-import-sort/exports": "error",
+    "quotes": [
+      "error",
+      "double",
+      { "avoidEscape": true, "allowTemplateLiterals": false }
+    ]
   },
   "overrides": [
     {

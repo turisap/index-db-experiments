@@ -27,8 +27,7 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "yarn lint:fix",
-      "yarn prettier:fix",
-      "yarn lint:types"
+      "yarn prettier:fix"
     ]
   },
   "husky": {
@@ -38,11 +37,12 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "yarn lint:types &&",
     "lint": "eslint '**/*.{ts,tsx}'",
     "lint:fix": "yarn lint -- --fix",
     "lint:types": "tsc --noEmit",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "prettier:fix": "prettier --write"
   },
   "eslintConfig": {}
 }
