@@ -1,17 +1,12 @@
-interface IDBConfig {
-    dbName: string,
-    version?: number,
-    stores: Array<IDBStoreConfig>
-}
+import {IDBConfig, IDBStoreConfig, IStores} from './types'
 
-interface IDBStoreConfig {
-    name: string,
-    params: IDBObjectStoreParameters
-}
-
-class IndexDBController {
+// @TODO build by rollup
+// @TODO linting
+// @TODO typings
+class IndexDBController<T extends IStores> {
     private request: IDBOpenDBRequest | null = null
     private storesConfig: Array<IDBStoreConfig>
+    private db: IDBDatabase | null
     public error?: string
 
     constructor(config: IDBConfig) {
@@ -45,7 +40,7 @@ class IndexDBController {
 
     private onConnectSuccess(event: Event){
         const db = (event.target as IDBOpenDBRequest)?.result
-        db.onversionchange = this.onVersionChange.bind(this)
+        db.onversionchange = IndexDBController.onVersionChange
 
         console.info(`successfully connected to ${db.name}`)
         console.info(event)
@@ -70,11 +65,16 @@ class IndexDBController {
                     db.deleteObjectStore(name)
                 }
             })
+
         }
     }
 
-    private onVersionChange() {
+    private static onVersionChange() {
         console.warn('changing DB version')
+    }
+
+    public addValue(store, value) {
+
     }
 
 }
