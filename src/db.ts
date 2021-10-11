@@ -8,7 +8,7 @@ import { error, info, warn } from "./utils";
 class IndexDBController {
     private request: IDBOpenDBRequest | null = null;
     private storesConfig: Array<IDBStoreConfig>;
-    // private db: IDBDatabase | null;
+    private db: IDBDatabase | null;
 
     public error?: string;
 
@@ -42,30 +42,31 @@ class IndexDBController {
     }
 
     private onConnectSuccess(event: Event) {
-        const db = (event.target as IDBOpenDBRequest)?.result;
-        db.onversionchange = IndexDBController.onVersionChange;
+        this.db = (event.target as IDBOpenDBRequest)?.result;
 
-        info(`successfully connected to ${db.name}`);
+        this.db.onversionchange = IndexDBController.onVersionChange;
+
+        info(`successfully connected to ${this.db.name}`);
         info(event);
     }
 
     private onUpgradeNeeded(event: Event) {
         warn("db upgrade needed");
 
-        const db = (event.target as IDBOpenDBRequest)?.result;
+        this.db = (event.target as IDBOpenDBRequest)?.result;
 
-        if (db) {
+        if (this.db) {
             const newStoresNames = this.storesConfig.map((store) => store.name);
 
             this.storesConfig.forEach((config) => {
-                if (!db.objectStoreNames.contains(config.name)) {
-                    db.createObjectStore(config.name, config.params);
+                if (!this.db.objectStoreNames.contains(config.name)) {
+                    this.db.createObjectStore(config.name, config.params);
                 }
             });
 
-            Array.from(db.objectStoreNames).forEach((name) => {
+            Array.from(this.db.objectStoreNames).forEach((name) => {
                 if (!newStoresNames.includes(name)) {
-                    db.deleteObjectStore(name);
+                    this.db.deleteObjectStore(name);
                 }
             });
         }
