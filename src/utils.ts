@@ -1,5 +1,8 @@
-export const warn = (msg: string | Event) => console.warn(msg);
+export const warn = (msg: string | Event, ...args: any) =>
+    console.warn(msg, args);
 
-export const error = (msg: string | Event) => console.error(msg);
+export const error = (msg: string | Event, ...args: any) =>
+    console.error(msg, args);
 
-export const info = (msg: string | Event) => console.info(msg);
+export const info = (msg: string | Event, ...args: any) =>
+    console.info(msg, args);

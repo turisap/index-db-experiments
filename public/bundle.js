@@ -8884,9 +8884,27 @@
 
 	var ReactDOM = reactDom.exports;
 
-	var warn = function (msg) { return console.warn(msg); };
-	var error = function (msg) { return console.error(msg); };
-	var info = function (msg) { return console.info(msg); };
+	var warn = function (msg) {
+	    var args = [];
+	    for (var _i = 1; _i < arguments.length; _i++) {
+	        args[_i - 1] = arguments[_i];
+	    }
+	    return console.warn(msg, args);
+	};
+	var error = function (msg) {
+	    var args = [];
+	    for (var _i = 1; _i < arguments.length; _i++) {
+	        args[_i - 1] = arguments[_i];
+	    }
+	    return console.error(msg, args);
+	};
+	var info = function (msg) {
+	    var args = [];
+	    for (var _i = 1; _i < arguments.length; _i++) {
+	        args[_i - 1] = arguments[_i];
+	    }
+	    return console.info(msg, args);
+	};
 
 	// @TODO build by rollup
 	// @TODO linting
@@ -8895,7 +8913,11 @@
 	var IndexDBController = /** @class */ (function () {
 	    function IndexDBController(config) {
 	        this.request = null;
+	        this.stack = [];
 	        this.init(config);
+	        this.onAddValueSuccessCb = config.onAddValueSuccess;
+	        this.onUpdateNeededCb = config.onUpdateNeeded;
+	        this.onAddValueFailCb = config.onAddValueFail;
 	        this.storesConfig = config.stores;
 	    }
 	    IndexDBController.prototype.init = function (config) {
@@ -8917,17 +8939,23 @@
 	        error(this.error);
 	    };
 	    IndexDBController.prototype.onConnectSuccess = function (event) {
+	        var _this = this;
 	        var _a;
 	        this.db = (_a = event.target) === null || _a === void 0 ? void 0 : _a.result;
 	        this.db.onversionchange = IndexDBController.onVersionChange;
 	        info("successfully connected to " + this.db.name);
 	        info(event);
+	        this.stack.forEach(function (_a) {
+	            var store = _a.store, value = _a.value;
+	            return _this.processAddedValue(store, value);
+	        });
 	    };
 	    IndexDBController.prototype.onUpgradeNeeded = function (event) {
 	        var _this = this;
-	        var _a;
+	        var _a, _b;
 	        warn("db upgrade needed");
-	        this.db = (_a = event.target) === null || _a === void 0 ? void 0 : _a.result;
+	        (_a = this.onUpdateNeededCb) === null || _a === void 0 ? void 0 : _a.call(this);
+	        this.db = (_b = event.target) === null || _b === void 0 ? void 0 : _b.result;
 	        if (this.db) {
 	            var newStoresNames_1 = this.storesConfig.map(function (store) { return store.name; });
 	            this.storesConfig.forEach(function (config) {
@@ -8945,20 +8973,53 @@
 	    IndexDBController.onVersionChange = function () {
 	        warn("changing DB version");
 	    };
+	    IndexDBController.prototype.onAddValueSuccess = function (value) {
+	        var _a;
+	        info("value added to the db");
+	        (_a = this.onAddValueSuccessCb) === null || _a === void 0 ? void 0 : _a.call(this, value);
+	    };
+	    IndexDBController.prototype.onAddValueFail = function (event) {
+	        this.onAddValueFailCb(event);
+	        error("Error adding to db", event);
+	    };
+	    IndexDBController.prototype.processAddedValue = function (store, value) {
+	        try {
+	            var transaction = this.db.transaction(store, "readwrite");
+	            var objectStore = transaction.objectStore(store);
+	            var request = objectStore.add(value);
+	            request.onsuccess = this.onAddValueSuccess.bind(this, value);
+	            request.onerror = this.onAddValueFail.bind(this);
+	        }
+	        catch (e) {
+	            error(e);
+	        }
+	    };
+	    IndexDBController.prototype.addValue = function (store, value) {
+	        if (this.db) {
+	            return this.processAddedValue(store, value);
+	        }
+	        this.stack.push({ store: store, value: value });
+	    };
 	    return IndexDBController;
 	}());
 
 	var dbController = new IndexDBController({
 	    dbName: "testy",
-	    version: Date.now(),
+	    version: 3,
 	    stores: [
 	        { name: "users", params: { keyPath: "id", autoIncrement: true } },
 	        { name: "books", params: { keyPath: "id", autoIncrement: false } },
 	    ],
+	    onAddValueSuccess: function () { return console.log("yahoo, value has been added"); },
+	    onUpdateNeeded: function () { return alert("DB upgrade needed, please reload the page"); },
+	    onAddValueFail: function () { return alert("oh no, could not add the value"); },
 	});
 	function App() {
 	    react.exports.useEffect(function () {
-	        console.error(dbController.error);
+	        dbController.addValue("users", {
+	            name: "Kirill Shakirov",
+	            email: "fofofo",
+	        });
 	    }, []);
 	    return jsxRuntime.exports.jsx("div", { children: "index db" }, void 0);
 	}

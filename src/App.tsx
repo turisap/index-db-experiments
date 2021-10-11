@@ -4,16 +4,22 @@ import { IndexDBController } from "./db";
 
 const dbController = new IndexDBController({
     dbName: "testy",
-    version: Date.now(),
+    version: 3,
     stores: [
         { name: "users", params: { keyPath: "id", autoIncrement: true } },
         { name: "books", params: { keyPath: "id", autoIncrement: false } },
     ],
+    onAddValueSuccess: () => console.log("yahoo, value has been added"),
+    onUpdateNeeded: () => alert("DB upgrade needed, please reload the page"),
+    onAddValueFail: () => alert("oh no, could not add the value"),
 });
 
 function App() {
     useEffect(() => {
-        console.error(dbController.error);
+        dbController.addValue("users", {
+            name: "Kirill Shakirov",
+            email: "fofofo",
+        });
     }, []);
 
     return <div>index db</div>;
