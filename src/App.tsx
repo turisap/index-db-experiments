@@ -20,6 +20,17 @@ function App() {
             name: "Kirill Shakirov",
             email: "fofofo",
         });
+        const id = setTimeout(() => {
+            dbController
+                .getById("users", 1)
+                .then((resp) => console.log(resp))
+                .catch((err) => {
+                    alert("oh no");
+                    console.error(err);
+                });
+        }, 2000);
+
+        return () => window.clearTimeout(id);
     }, []);
 
     return <div>index db</div>;
