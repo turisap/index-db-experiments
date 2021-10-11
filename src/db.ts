@@ -123,17 +123,21 @@ class IndexDBController {
     }
 
     private processGettingValue(store: string, id: number) {
-        try {
-            const objectStore = this.getStore(store, "readonly");
-            const request = objectStore.get(id);
+        return new Promise((resolve, reject) => {
+            try {
+                const objectStore = this.getStore(store, "readonly");
+                const request = objectStore.get(id);
 
-            return new Promise((resolve, reject) => {
                 request.onsuccess = () => resolve(request.result);
-                request.onerror = reject;
-            });
-        } catch (e) {
-            error(e);
-        }
+                request.onerror = (e) => {
+                    console.log("rejet");
+                    reject(e);
+                };
+            } catch (e) {
+                reject(e);
+                error(e);
+            }
+        });
     }
 
     public addValue(store: string, value: any) {
