@@ -129,10 +129,7 @@ class IndexDBController {
                 const request = objectStore.get(id);
 
                 request.onsuccess = () => resolve(request.result);
-                request.onerror = (e) => {
-                    console.log("rejet");
-                    reject(e);
-                };
+                request.onerror = reject;
             } catch (e) {
                 reject(e);
                 error(e);
@@ -153,7 +150,10 @@ class IndexDBController {
             return this.processGettingValue(store, id);
         }
 
-        this.findStack.push(store, id);
+        this.findStack.push({ store, id });
+
+        // @TODO you need to handle the case when there is no connection to the db yet
+        // and there is no promise to return
     }
 }
 
