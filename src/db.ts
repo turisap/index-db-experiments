@@ -4,6 +4,8 @@ import {
     IDBStoreConfig,
     IPostponedByIdRequest,
     TPostponedAddValueRequest,
+    TStoreKeys,
+    ValueOf,
 } from "./types";
 import { error, info, warn } from "./utils";
 
@@ -132,7 +134,7 @@ class IndexDBController<T> implements ControllerClass<T> {
         }
     }
 
-    public addValue(store: string, value: any) {
+    public addValue(store: TStoreKeys<T>, value: ValueOf<T>) {
         return new Promise((resolve, reject) => {
             if (this.db) {
                 return this.processAddedValue({
@@ -147,7 +149,7 @@ class IndexDBController<T> implements ControllerClass<T> {
         });
     }
 
-    public getById(store: Extract<keyof T, string>, id: number) {
+    public getById(store: TStoreKeys<T>, id: number) {
         return new Promise((resolve, reject) => {
             if (this.db) {
                 return this.processGettingValue({ store, id, resolve, reject });

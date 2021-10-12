@@ -21,6 +21,12 @@ export type TPostponedAddValueRequest = Omit<IPostponedByIdRequest, "id"> & {
     value: any;
 };
 
+export type TStoreKeys<S> = Extract<keyof S, string>;
+
+export type ValueOf<T> = T[keyof T];
+
 export abstract class ControllerClass<S> {
-    public abstract getById(name: Extract<keyof S, string>, id: number);
+    public abstract getById(name: TStoreKeys<S>, id: number);
+
+    public abstract addValue(store: TStoreKeys<S>, value: ValueOf<S>);
 }
