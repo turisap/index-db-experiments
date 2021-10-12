@@ -2,9 +2,7 @@ export interface IDBConfig {
     dbName: string;
     version?: number;
     stores: Array<IDBStoreConfig>;
-    onAddValueSuccess?: (value: any) => void;
     onUpdateNeeded?: () => void;
-    onAddValueFail?: (error: Event) => void;
 }
 
 export interface IDBStoreConfig {
@@ -22,3 +20,7 @@ export interface IPostponedByIdRequest {
     resolve: (value: unknown) => void;
     reject: (reason?: any) => void;
 }
+
+export type TPostponedAddValueRequest = Omit<IPostponedByIdRequest, "id"> & {
+    value: any;
+};

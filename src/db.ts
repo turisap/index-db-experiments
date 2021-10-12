@@ -1,4 +1,9 @@
-import { IDBConfig, IDBStoreConfig, IPostponedByIdRequest } from "./types";
+import {
+    IDBConfig,
+    IDBStoreConfig,
+    IPostponedByIdRequest,
+    TPostponedAddValueRequest,
+} from "./types";
 import { error, info, warn } from "./utils";
 
 // @TODO build by rollup
@@ -8,11 +13,8 @@ class IndexDBController {
     private request: IDBOpenDBRequest | null = null;
     private db: IDBDatabase | null;
     private readonly storesConfig: Array<IDBStoreConfig>;
-    // use cb instead
-    private readonly onAddValueSuccessCb?: IDBConfig["onAddValueSuccess"];
     private readonly onUpdateNeededCb?: IDBConfig["onUpdateNeeded"];
-    private readonly onAddValueFailCb?: IDBConfig["onAddValueFail"];
-    private readonly addStack: Array<any> = [];
+    private readonly addStack: Array<TPostponedAddValueRequest> = [];
     private readonly findStack: Array<IPostponedByIdRequest> = [];
 
     public error?: string;
@@ -20,9 +22,7 @@ class IndexDBController {
     constructor(config: IDBConfig) {
         this.init(config);
 
-        this.onAddValueSuccessCb = config.onAddValueSuccess;
         this.onUpdateNeededCb = config.onUpdateNeeded;
-        this.onAddValueFailCb = config.onAddValueFail;
         this.storesConfig = config.stores;
     }
 
@@ -56,10 +56,13 @@ class IndexDBController {
 
         info(`successfully connected to ${this.db.name}`);
 
-        // get and write all values if operations on the db started before connection
-        this.addStack.forEach(({ store, value }) =>
-            this.processAddedValue(store, value),
-        );
+        this.processStacksOnConnect();
+    }
+
+    private processStacksOnConnect() {
+        this.addStack.forEach((postponedRequest) => {
+            this.processAddedValue(postponedRequest);
+        });
 
         this.findStack.forEach((request) => this.processGettingValue(request));
     }
@@ -91,31 +94,23 @@ class IndexDBController {
         warn("changing DB version");
     }
 
-    private onAddValueSuccess(value: any) {
-        info("value added to the db");
-        this.onAddValueSuccessCb?.(value);
-    }
-
-    private onAddValueFail(event) {
-        this.onAddValueFailCb(event);
-        error("Error adding to db", event);
-    }
-
     private getStore(store: string, mode?: IDBTransactionMode) {
         const transaction = this.db.transaction(store, mode);
-        const objectStore = transaction.objectStore(store);
-
-        return objectStore;
+        return transaction.objectStore(store);
     }
 
-    private processAddedValue(store: string, value: any) {
+    private processAddedValue(postponedRequest: TPostponedAddValueRequest) {
         try {
-            const objectStore = this.getStore(store, "readwrite");
-            const request = objectStore.add(value);
+            const objectStore = this.getStore(
+                postponedRequest.store,
+                "readwrite",
+            );
+            const request = objectStore.add(postponedRequest.value);
 
-            request.onsuccess = this.onAddValueSuccess.bind(this, value);
-            request.onerror = this.onAddValueFail.bind(this);
+            request.onsuccess = () => postponedRequest.resolve(request.result);
+            request.onerror = postponedRequest.reject;
         } catch (e) {
+            postponedRequest.reject(e);
             error(e);
         }
     }
@@ -137,11 +132,18 @@ class IndexDBController {
     }
 
     public addValue(store: string, value: any) {
-        if (this.db) {
-            return this.processAddedValue(store, value);
-        }
+        return new Promise((resolve, reject) => {
+            if (this.db) {
+                return this.processAddedValue({
+                    store,
+                    value,
+                    resolve,
+                    reject,
+                });
+            }
 
-        this.addStack.push({ store, value });
+            this.addStack.push({ store, value, resolve, reject });
+        });
     }
 
     public getById(store: string, id: number) {

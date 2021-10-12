@@ -9,9 +9,7 @@ const dbController = new IndexDBController({
         { name: "users", params: { keyPath: "id", autoIncrement: true } },
         { name: "books", params: { keyPath: "id", autoIncrement: false } },
     ],
-    // onAddValueSuccess: () => console.log("yahoo, value has been added"),
     onUpdateNeeded: () => alert("DB upgrade needed, please reload the page"),
-    onAddValueFail: () => alert("oh no, could not add the value"),
 });
 
 function App() {
@@ -33,7 +31,13 @@ function App() {
     return (
         <div
             onClick={() => {
-                dbController.getById("users", 2).then((r) => console.log(r));
+                dbController
+                    .addValue("users", {
+                        name: "Vova IVANOV",
+                        email: "TRATAT",
+                    })
+                    .then((r) => console.log(r))
+                    .catch(console.error);
             }}
         >
             index db
