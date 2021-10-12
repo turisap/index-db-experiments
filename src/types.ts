@@ -10,10 +10,6 @@ export interface IDBStoreConfig {
     params: IDBObjectStoreParameters;
 }
 
-export interface IStores {
-    [key: string]: any;
-}
-
 export interface IPostponedByIdRequest {
     store: string;
     id: number;
@@ -24,3 +20,7 @@ export interface IPostponedByIdRequest {
 export type TPostponedAddValueRequest = Omit<IPostponedByIdRequest, "id"> & {
     value: any;
 };
+
+export abstract class ControllerClass<S> {
+    public abstract getById(name: Extract<keyof S, string>, id: number);
+}

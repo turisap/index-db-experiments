@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 
 import { IndexDBController } from "./db";
 
-const dbController = new IndexDBController({
+const dbController = new IndexDBController<{ users: any; books: any }>({
     dbName: "testy",
     version: 3,
     stores: [

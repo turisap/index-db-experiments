@@ -1,4 +1,5 @@
 import {
+    ControllerClass,
     IDBConfig,
     IDBStoreConfig,
     IPostponedByIdRequest,
@@ -9,7 +10,7 @@ import { error, info, warn } from "./utils";
 // @TODO build by rollup
 // @TODO typings
 // @TODO add generic stores
-class IndexDBController {
+class IndexDBController<T> implements ControllerClass<T> {
     private request: IDBOpenDBRequest | null = null;
     private db: IDBDatabase | null;
     private readonly storesConfig: Array<IDBStoreConfig>;
@@ -146,7 +147,7 @@ class IndexDBController {
         });
     }
 
-    public getById(store: string, id: number) {
+    public getById(store: Extract<keyof T, string>, id: number) {
         return new Promise((resolve, reject) => {
             if (this.db) {
                 return this.processGettingValue({ store, id, resolve, reject });
