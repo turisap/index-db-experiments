@@ -9,7 +9,7 @@ const dbController = new IndexDBController({
         { name: "users", params: { keyPath: "id", autoIncrement: true } },
         { name: "books", params: { keyPath: "id", autoIncrement: false } },
     ],
-    onAddValueSuccess: () => console.log("yahoo, value has been added"),
+    // onAddValueSuccess: () => console.log("yahoo, value has been added"),
     onUpdateNeeded: () => alert("DB upgrade needed, please reload the page"),
     onAddValueFail: () => alert("oh no, could not add the value"),
 });
@@ -22,15 +22,23 @@ function App() {
         });
 
         dbController
-            .getById("users", 324)
-            .then((resp) => console.log(resp))
+            .getById("users", 1)
+            .then((resp) => console.log("rrr", resp))
             .catch((err) => {
                 alert("oh no");
                 console.error(err);
             });
     }, []);
 
-    return <div>index db</div>;
+    return (
+        <div
+            onClick={() => {
+                dbController.getById("users", 2).then((r) => console.log(r));
+            }}
+        >
+            index db
+        </div>
+    );
 }
 
 export default App;

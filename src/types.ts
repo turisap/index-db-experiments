@@ -15,3 +15,10 @@ export interface IDBStoreConfig {
 export interface IStores {
     [key: string]: any;
 }
+
+export interface IPostponedByIdRequest {
+    store: string;
+    id: number;
+    resolve: (value: unknown) => void;
+    reject: (reason?: any) => void;
+}

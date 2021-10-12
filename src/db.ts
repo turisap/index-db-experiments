@@ -1,4 +1,4 @@
-import { IDBConfig, IDBStoreConfig } from "./types";
+import { IDBConfig, IDBStoreConfig, IPostponedByIdRequest } from "./types";
 import { error, info, warn } from "./utils";
 
 // @TODO build by rollup
@@ -13,7 +13,7 @@ class IndexDBController {
     private readonly onUpdateNeededCb?: IDBConfig["onUpdateNeeded"];
     private readonly onAddValueFailCb?: IDBConfig["onAddValueFail"];
     private readonly addStack: Array<any> = [];
-    private readonly findStack: Array<any> = [];
+    private readonly findStack: Array<IPostponedByIdRequest> = [];
 
     public error?: string;
 
@@ -61,9 +61,7 @@ class IndexDBController {
             this.processAddedValue(store, value),
         );
 
-        this.findStack.forEach(({ store, id }) =>
-            this.processGettingValue(store, id),
-        );
+        this.findStack.forEach((request) => this.processGettingValue(request));
     }
 
     private onUpgradeNeeded(event: Event) {
@@ -122,19 +120,20 @@ class IndexDBController {
         }
     }
 
-    private processGettingValue(store: string, id: number) {
-        return new Promise((resolve, reject) => {
-            try {
-                const objectStore = this.getStore(store, "readonly");
-                const request = objectStore.get(id);
+    private processGettingValue(postponedRequest: IPostponedByIdRequest) {
+        try {
+            const objectStore = this.getStore(
+                postponedRequest.store,
+                "readonly",
+            );
+            const request = objectStore.get(postponedRequest.id);
 
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = reject;
-            } catch (e) {
-                reject(e);
-                error(e);
-            }
-        });
+            request.onsuccess = () => postponedRequest.resolve(request.result);
+            request.onerror = postponedRequest.reject;
+        } catch (e) {
+            postponedRequest.reject(e);
+            error(e);
+        }
     }
 
     public addValue(store: string, value: any) {
@@ -146,14 +145,13 @@ class IndexDBController {
     }
 
     public getById(store: string, id: number) {
-        if (this.db) {
-            return this.processGettingValue(store, id);
-        }
+        return new Promise((resolve, reject) => {
+            if (this.db) {
+                return this.processGettingValue({ store, id, resolve, reject });
+            }
 
-        this.findStack.push({ store, id });
-
-        // @TODO you need to handle the case when there is no connection to the db yet
-        // and there is no promise to return
+            this.findStack.push({ store, id, resolve, reject });
+        });
     }
 }
 
