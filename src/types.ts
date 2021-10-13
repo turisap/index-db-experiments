@@ -17,10 +17,6 @@ export type TPostponedByIdRequest<Store, StoresObject> = {
     reject: (reason?: any) => void;
 };
 
-// export type TPostponedAddValueRequest<T> = Omit<IPostponedByIdRequest<T>, "id"> & {
-//     value: any;
-// };
-
 export type TPostponedAddValueRequest<Store, StoresObject> = {
     store: Store;
     value: TStoreValue<Store, StoresObject>;

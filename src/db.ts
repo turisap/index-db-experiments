@@ -87,7 +87,7 @@ class IndexDBController<Stores> {
         });
     }
 
-    private getStore<K extends TStoreKeys<Stores>>(store: K, mode?: IDBTransactionMode) {
+    private getStore<StoreName extends TStoreKeys<Stores>>(store: StoreName, mode?: IDBTransactionMode) {
         if (this.db) {
             const transaction = this.db.transaction(store, mode);
             return transaction.objectStore(store);
@@ -109,9 +109,9 @@ class IndexDBController<Stores> {
         }
     }
 
-    private processGettingValue<K extends TStoreKeys<Stores>>(postponedRequest: TPostponedByIdRequest<K, Stores>) {
+    private processGettingValue<StoreName extends TStoreKeys<Stores>>(postponedRequest: TPostponedByIdRequest<StoreName, Stores>) {
         try {
-            const objectStore = this.getStore<K>(postponedRequest.store, "readonly");
+            const objectStore = this.getStore<StoreName>(postponedRequest.store, "readonly");
             const request = objectStore.get(postponedRequest.id);
 
             request.onsuccess = () => postponedRequest.resolve(request.result);
@@ -137,10 +137,10 @@ class IndexDBController<Stores> {
         });
     }
 
-    public getById<K extends TStoreKeys<Stores>>(store: K, id: number): Promise<Stores[K]> {
+    public getById<StoreName extends TStoreKeys<Stores>>(store: StoreName, id: number): Promise<Stores[StoreName]> {
         return new Promise((resolve, reject) => {
             if (this.db) {
-                return this.processGettingValue<K>({ store, id, resolve, reject });
+                return this.processGettingValue<StoreName>({ store, id, resolve, reject });
             }
 
             this.findStack.push({ store, id, resolve, reject });
