@@ -10,14 +10,17 @@ export interface IDBStoreConfig {
     params: IDBObjectStoreParameters;
 }
 
-export interface IPostponedByIdRequest {
-    store: string;
+export interface IPostponedByIdRequest<T> {
+    store: TStoreKeys<T>;
     id: number;
     resolve: (value: unknown) => void;
     reject: (reason?: any) => void;
 }
 
-export type TPostponedAddValueRequest = Omit<IPostponedByIdRequest, "id"> & {
+export type TPostponedAddValueRequest<T> = Omit<
+    IPostponedByIdRequest<T>,
+    "id"
+> & {
     value: any;
 };
 

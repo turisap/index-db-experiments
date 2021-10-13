@@ -18,13 +18,13 @@ const dbController = new IndexDBController<IStore>({
 
 function App() {
     useEffect(() => {
-        dbController.addValue("users", {
+        dbController.addValue<"users">("users", {
             name: "Kirill Shakirov",
             email: "fofofo",
         });
 
         dbController
-            .getById("users", 1)
+            .getById<"users">("users", 1)
             .then((resp) => console.log("rrr", resp))
             .catch((err) => {
                 alert("oh no");
