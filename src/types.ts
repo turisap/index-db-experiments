@@ -17,10 +17,7 @@ export interface IPostponedByIdRequest<T> {
     reject: (reason?: any) => void;
 }
 
-export type TPostponedAddValueRequest<T> = Omit<
-    IPostponedByIdRequest<T>,
-    "id"
-> & {
+export type TPostponedAddValueRequest<T> = Omit<IPostponedByIdRequest<T>, "id"> & {
     value: any;
 };
 

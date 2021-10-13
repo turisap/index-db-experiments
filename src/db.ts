@@ -6,7 +6,7 @@ import { error, info, warn } from "./utils";
 // @TODO types linting
 class IndexDBController<Stores> {
     private request: IDBOpenDBRequest | null = null;
-    private db: IDBDatabase | null;
+    private db: IDBDatabase | null = null;
     private readonly storesConfig: Array<IDBStoreConfig>;
     private readonly onUpdateNeededCb?: IDBConfig["onUpdateNeeded"];
     private readonly addStack: Array<TPostponedAddValueRequest<Stores>> = [];
@@ -27,6 +27,10 @@ class IndexDBController<Stores> {
         }
 
         this.connect(config);
+    }
+
+    private static onVersionChange() {
+        warn("changing DB version");
     }
 
     private connect(config: IDBConfig) {
@@ -68,30 +72,28 @@ class IndexDBController<Stores> {
 
         this.db = (event.target as IDBOpenDBRequest)?.result;
 
-        if (this.db) {
-            const newStoresNames = this.storesConfig.map((store) => store.name);
+        const newStoresNames = this.storesConfig.map((store) => store.name);
 
-            this.storesConfig.forEach((config) => {
-                if (!this.db.objectStoreNames.contains(config.name)) {
-                    this.db.createObjectStore(config.name, config.params);
-                }
-            });
+        this.storesConfig.forEach((config) => {
+            if (this.db && !this.db.objectStoreNames.contains(config.name)) {
+                this.db.createObjectStore(config.name, config.params);
+            }
+        });
 
-            Array.from(this.db.objectStoreNames).forEach((name) => {
-                if (!newStoresNames.includes(name)) {
-                    this.db.deleteObjectStore(name);
-                }
-            });
-        }
-    }
-
-    private static onVersionChange() {
-        warn("changing DB version");
+        Array.from(this.db.objectStoreNames).forEach((name) => {
+            if (this.db && !newStoresNames.includes(name)) {
+                this.db.deleteObjectStore(name);
+            }
+        });
     }
 
     private getStore(store: TStoreKeys<Stores>, mode?: IDBTransactionMode) {
-        const transaction = this.db.transaction(store, mode);
-        return transaction.objectStore(store);
+        if (this.db) {
+            const transaction = this.db.transaction(store, mode);
+            return transaction.objectStore(store);
+        } else {
+            throw new Error("Index DB is not connected");
+        }
     }
 
     private processAddedValue(postponedRequest: TPostponedAddValueRequest<Stores>) {
