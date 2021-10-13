@@ -1,5 +1,5 @@
+import { ControllerClass } from "./abstract-class";
 import {
-    ControllerClass,
     IDBConfig,
     IDBStoreConfig,
     IPostponedByIdRequest,
@@ -10,8 +10,7 @@ import {
 import { error, info, warn } from "./utils";
 
 // @TODO build by rollup
-// @TODO typings
-// @TODO add generic stores
+// @TODO yarn2 pnp
 class IndexDBController<T> implements ControllerClass<T> {
     private request: IDBOpenDBRequest | null = null;
     private db: IDBDatabase | null;
