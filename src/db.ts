@@ -1,4 +1,4 @@
-import { IDBConfig, IDBStoreConfig, IPostponedByIdRequest, TPostponedAddValueRequest, TStoreKeys } from "./types";
+import { IDBConfig, IDBStoreConfig, TPostponedAddValueRequest, TPostponedByIdRequest, TStoreKeys, TStoreValue } from "./types";
 import { error, info, warn } from "./utils";
 
 // @TODO build by rollup
@@ -9,8 +9,8 @@ class IndexDBController<Stores> {
     private db: IDBDatabase | null = null;
     private readonly storesConfig: Array<IDBStoreConfig>;
     private readonly onUpdateNeededCb?: IDBConfig["onUpdateNeeded"];
-    private readonly addStack: Array<TPostponedAddValueRequest<Stores>> = [];
-    private readonly findStack: Array<IPostponedByIdRequest<Stores>> = [];
+    private readonly addStack: Array<TPostponedAddValueRequest<any, Stores>> = [];
+    private readonly findStack: Array<TPostponedByIdRequest<any, Stores>> = [];
 
     public error?: string;
 
@@ -87,7 +87,7 @@ class IndexDBController<Stores> {
         });
     }
 
-    private getStore(store: TStoreKeys<Stores>, mode?: IDBTransactionMode) {
+    private getStore<K extends TStoreKeys<Stores>>(store: K, mode?: IDBTransactionMode) {
         if (this.db) {
             const transaction = this.db.transaction(store, mode);
             return transaction.objectStore(store);
@@ -96,12 +96,12 @@ class IndexDBController<Stores> {
         }
     }
 
-    private processAddedValue(postponedRequest: TPostponedAddValueRequest<Stores>) {
+    private processAddedValue<StoreName extends TStoreKeys<Stores>>(postponedRequest: TPostponedAddValueRequest<StoreName, Stores>) {
         try {
             const objectStore = this.getStore(postponedRequest.store, "readwrite");
             const request = objectStore.add(postponedRequest.value);
 
-            request.onsuccess = () => postponedRequest.resolve(request.result);
+            request.onsuccess = () => postponedRequest.resolve(Number(request.result));
             request.onerror = postponedRequest.reject;
         } catch (e) {
             postponedRequest.reject(e);
@@ -109,9 +109,9 @@ class IndexDBController<Stores> {
         }
     }
 
-    private processGettingValue(postponedRequest: IPostponedByIdRequest<Stores>) {
+    private processGettingValue<K extends TStoreKeys<Stores>>(postponedRequest: TPostponedByIdRequest<K, Stores>) {
         try {
-            const objectStore = this.getStore(postponedRequest.store, "readonly");
+            const objectStore = this.getStore<K>(postponedRequest.store, "readonly");
             const request = objectStore.get(postponedRequest.id);
 
             request.onsuccess = () => postponedRequest.resolve(request.result);
@@ -122,10 +122,10 @@ class IndexDBController<Stores> {
         }
     }
 
-    public addValue<K extends TStoreKeys<Stores>>(store: K, value: Stores[K]) {
+    public addValue<StoreName extends TStoreKeys<Stores>>(store: StoreName, value: TStoreValue<StoreName, Stores>): Promise<number> {
         return new Promise((resolve, reject) => {
             if (this.db) {
-                return this.processAddedValue({
+                return this.processAddedValue<StoreName>({
                     store,
                     value,
                     resolve,
@@ -137,14 +137,10 @@ class IndexDBController<Stores> {
         });
     }
 
-    // public getById<K extends TStoreKeys<Stores>>(store: K, id: number): Promise<Stores[K] | undefined> {
-    public getById<K extends TStoreKeys<Stores>>(store: K, id: number) {
-        // const a: boolean = 4;
-        //
-        // return { a, store, id };
+    public getById<K extends TStoreKeys<Stores>>(store: K, id: number): Promise<Stores[K]> {
         return new Promise((resolve, reject) => {
             if (this.db) {
-                return this.processGettingValue({ store, id, resolve, reject });
+                return this.processGettingValue<K>({ store, id, resolve, reject });
             }
 
             this.findStack.push({ store, id, resolve, reject });

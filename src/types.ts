@@ -10,17 +10,26 @@ export interface IDBStoreConfig {
     params: IDBObjectStoreParameters;
 }
 
-export interface IPostponedByIdRequest<T> {
-    store: TStoreKeys<T>;
+export type TPostponedByIdRequest<Store, StoresObject> = {
+    store: Store;
     id: number;
-    resolve: (value: unknown) => void;
+    resolve: (value: TStoreValue<Store, StoresObject>) => void;
     reject: (reason?: any) => void;
-}
+};
 
-export type TPostponedAddValueRequest<T> = Omit<IPostponedByIdRequest<T>, "id"> & {
-    value: any;
+// export type TPostponedAddValueRequest<T> = Omit<IPostponedByIdRequest<T>, "id"> & {
+//     value: any;
+// };
+
+export type TPostponedAddValueRequest<Store, StoresObject> = {
+    store: Store;
+    value: TStoreValue<Store, StoresObject>;
+    resolve: (id: number) => void;
+    reject: (reason?: any) => void;
 };
 
 export type TStoreKeys<S> = Extract<keyof S, string>;
 
 export type ValueOf<T> = T[keyof T];
+
+export type TStoreValue<StoreName, StoresObject> = StoreName extends TStoreKeys<StoresObject> ? StoresObject[StoreName] : any;
