@@ -137,7 +137,11 @@ class IndexDBController<Stores> {
         });
     }
 
+    // public getById<K extends TStoreKeys<Stores>>(store: K, id: number): Promise<Stores[K] | undefined> {
     public getById<K extends TStoreKeys<Stores>>(store: K, id: number) {
+        // const a: boolean = 4;
+        //
+        // return { a, store, id };
         return new Promise((resolve, reject) => {
             if (this.db) {
                 return this.processGettingValue({ store, id, resolve, reject });

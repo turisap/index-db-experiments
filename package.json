@@ -39,7 +39,8 @@
     "*.{ts,tsx}": [
       "yarn lint:fix",
       "yarn prettier:fix"
-    ]
+    ],
+    "./src/db.ts": "yarn check-types"
   },
   "husky": {
     "hooks": {
@@ -54,7 +55,8 @@
     "lint:fix": "yarn lint -- --fix",
     "lint:types": "tsc --noEmit",
     "prepare": "husky install",
-    "prettier:fix": "prettier --write"
+    "prettier:fix": "prettier --write",
+    "check-types": "tsc ./src/db.ts --noEmit"
   },
   "eslintConfig": {}
 }
