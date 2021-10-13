@@ -18,11 +18,6 @@ const dbController = new IndexDBController<IStore>({
 
 function App() {
     useEffect(() => {
-        // dbController.addValue<"users">("users", {
-        //     name: "Kirill Shakirov",
-        //     email: "fofofo",
-        // });
-
         dbController
             .getById<"users">("users", 1)
             .then((resp) => console.log("rrr", resp))
@@ -30,18 +25,34 @@ function App() {
                 alert("oh no");
                 console.error(err);
             });
+
+        dbController
+            .addValue<"users">("users", {
+                name: "Vova IVANOV",
+                email: "TRATAT",
+            })
+            .then((r) => console.log(r))
+            .catch(console.error);
+
+        dbController
+            .getAllValues<"users">("users")
+            .then((resp) => console.log("all", resp))
+            .catch((err) => {
+                alert("oh");
+                console.log(err);
+            });
     }, []);
 
     return (
         <div
             onClick={() => {
-                // dbController
-                //     .addValue("users", {
-                //         name: "Vova IVANOV",
-                //         email: "TRATAT",
-                //     })
-                //     .then((r) => console.log(r))
-                //     .catch(console.error);
+                dbController
+                    .addValue<"users">("users", {
+                        name: "Vova IVANOV",
+                        email: "TRATAT",
+                    })
+                    .then((r) => console.log(r))
+                    .catch(console.error);
             }}
         >
             index db

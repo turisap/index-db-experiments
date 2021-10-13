@@ -10,17 +10,25 @@ export interface IDBStoreConfig {
     params: IDBObjectStoreParameters;
 }
 
-export type TPostponedByIdRequest<Store, StoresObject> = {
+export type TPostponedByIdRequest<Store, StoresObject> = TReject & {
     store: Store;
     id: number;
     resolve: (value: TStoreValue<Store, StoresObject>) => void;
-    reject: (reason?: any) => void;
 };
 
-export type TPostponedAddValueRequest<Store, StoresObject> = {
+export type TPostponedAddValueRequest<Store, StoresObject> = TReject & {
     store: Store;
     value: TStoreValue<Store, StoresObject>;
     resolve: (id: number) => void;
+};
+
+export type TPostponedGetAllRequest<Store, StoresObject> = TReject & {
+    store: Store;
+    range?: IDBKeyRange;
+    resolve: (value: Array<TStoreValue<Store, StoresObject>>) => void;
+};
+
+export type TReject = {
     reject: (reason?: any) => void;
 };
 
