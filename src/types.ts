@@ -1,3 +1,13 @@
+export type TStoreKeys<S> = Extract<keyof S, string>;
+
+export type ValueOf<T> = T[keyof T];
+
+export type TStoreValue<StoreName, StoresObject> = StoreName extends TStoreKeys<StoresObject> ? StoresObject[StoreName] : any;
+
+export type TReject = {
+    reject: (reason?: any) => void;
+};
+
 export interface IDBConfig {
     dbName: string;
     version?: number;
@@ -28,12 +38,19 @@ export type TPostponedGetAllRequest<Store, StoresObject> = TReject & {
     resolve: (value: Array<TStoreValue<Store, StoresObject>>) => void;
 };
 
-export type TReject = {
-    reject: (reason?: any) => void;
+export type TStackSet<PostponedRequest> = {
+    postponedRequests: Array<PostponedRequest>;
+    processFn: (value: PostponedRequest) => void;
 };
 
-export type TStoreKeys<S> = Extract<keyof S, string>;
+type TAddOneStackSet<Store, StoresObject> = TStackSet<TPostponedAddValueRequest<Store, StoresObject>>;
 
-export type ValueOf<T> = T[keyof T];
+type TGetOneStackSet<Store, StoresObject> = TStackSet<TPostponedByIdRequest<Store, StoresObject>>;
 
-export type TStoreValue<StoreName, StoresObject> = StoreName extends TStoreKeys<StoresObject> ? StoresObject[StoreName] : any;
+type TGetAllStackSet<Store, StoresObject> = TStackSet<TPostponedGetAllRequest<Store, StoresObject>>;
+
+export type TStackMap<Store, StoresObject> = {
+    addOne: TAddOneStackSet<Store, StoresObject>;
+    getOne: TGetOneStackSet<Store, StoresObject>;
+    getAll: TGetAllStackSet<Store, StoresObject>;
+};

@@ -4,6 +4,7 @@ import {
     TPostponedAddValueRequest,
     TPostponedByIdRequest,
     TPostponedGetAllRequest,
+    TStackMap,
     TStoreKeys,
     TStoreValue,
 } from "./types";
@@ -16,9 +17,21 @@ class IndexDBController<Stores> {
     private db: IDBDatabase | null = null;
     private readonly storesConfig: Array<IDBStoreConfig>;
     private readonly onUpdateNeededCb?: IDBConfig["onUpdateNeeded"];
-    private readonly addStack: Array<TPostponedAddValueRequest<any, Stores>> = [];
-    private readonly findStack: Array<TPostponedByIdRequest<any, Stores>> = [];
-    private readonly getAllStack: Array<TPostponedGetAllRequest<any, Stores>> = [];
+
+    private readonly stackMap: TStackMap<any, Stores> = {
+        addOne: {
+            postponedRequests: [],
+            processFn: this.processAddValue.bind(this),
+        },
+        getOne: {
+            postponedRequests: [],
+            processFn: this.processGettingValueById.bind(this),
+        },
+        getAll: {
+            postponedRequests: [],
+            processFn: this.processGetAllValues.bind(this),
+        },
+    };
 
     public error?: string;
 
@@ -66,11 +79,10 @@ class IndexDBController<Stores> {
         this.processStacksOnConnect();
     }
 
-    // @TODO convert to a stack -> cb pair
     private processStacksOnConnect() {
-        this.addStack.forEach(this.processAddedValue.bind(this));
-        this.findStack.forEach(this.processGettingValue.bind(this));
-        this.getAllStack.forEach(this.processGetAllValues.bind(this));
+        Object.values(this.stackMap).forEach((mapSet) => {
+            mapSet.postponedRequests.forEach((req) => mapSet.processFn(req as any));
+        });
     }
 
     private onUpgradeNeeded(event: Event) {
@@ -105,7 +117,7 @@ class IndexDBController<Stores> {
     }
 
     // @TODO@ all these three functions are very similar. it might need to be refactored
-    private processAddedValue<StoreName extends TStoreKeys<Stores>>(postponedRequest: TPostponedAddValueRequest<StoreName, Stores>) {
+    private processAddValue<StoreName extends TStoreKeys<Stores>>(postponedRequest: TPostponedAddValueRequest<StoreName, Stores>) {
         try {
             const objectStore = this.getStore(postponedRequest.store, "readwrite");
             const request = objectStore.add(postponedRequest.value);
@@ -118,7 +130,7 @@ class IndexDBController<Stores> {
         }
     }
 
-    private processGettingValue<StoreName extends TStoreKeys<Stores>>(postponedRequest: TPostponedByIdRequest<StoreName, Stores>) {
+    private processGettingValueById<StoreName extends TStoreKeys<Stores>>(postponedRequest: TPostponedByIdRequest<StoreName, Stores>) {
         try {
             const objectStore = this.getStore<StoreName>(postponedRequest.store, "readonly");
             const request = objectStore.get(postponedRequest.id);
@@ -150,10 +162,10 @@ class IndexDBController<Stores> {
             const requestPayload = { store, value, resolve, reject };
 
             if (this.db) {
-                return this.processAddedValue<StoreName>(requestPayload);
+                return this.processAddValue<StoreName>(requestPayload);
             }
 
-            this.addStack.push(requestPayload);
+            this.stackMap["addOne"].postponedRequests.push(requestPayload);
         });
     }
 
@@ -162,10 +174,10 @@ class IndexDBController<Stores> {
             const requestPayload = { store, id, resolve, reject };
 
             if (this.db) {
-                return this.processGettingValue<StoreName>(requestPayload);
+                return this.processGettingValueById<StoreName>(requestPayload);
             }
 
-            this.findStack.push(requestPayload);
+            this.stackMap["getOne"].postponedRequests.push(requestPayload);
         });
     }
 
@@ -177,7 +189,7 @@ class IndexDBController<Stores> {
                 return this.processGetAllValues<StoreName>(requestPayload);
             }
 
-            this.getAllStack.push(requestPayload);
+            this.stackMap["getAll"].postponedRequests.push(requestPayload);
         });
     }
 }
