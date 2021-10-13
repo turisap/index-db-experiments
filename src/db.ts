@@ -1,12 +1,4 @@
-import { ControllerClass } from "./abstract-class";
-import {
-    IDBConfig,
-    IDBStoreConfig,
-    IPostponedByIdRequest,
-    TPostponedAddValueRequest,
-    TStoreKeys,
-    ValueOf,
-} from "./types";
+import { IDBConfig, IDBStoreConfig, IPostponedByIdRequest, TPostponedAddValueRequest, TStoreKeys } from "./types";
 import { error, info, warn } from "./utils";
 
 // @TODO build by rollup
@@ -97,7 +89,7 @@ class IndexDBController<Stores> {
         warn("changing DB version");
     }
 
-    private getStore(store: string, mode?: IDBTransactionMode) {
+    private getStore(store: TStoreKeys<Stores>, mode?: IDBTransactionMode) {
         const transaction = this.db.transaction(store, mode);
         return transaction.objectStore(store);
     }
