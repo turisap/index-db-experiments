@@ -50,10 +50,9 @@
   "scripts": {
     "start": "yarn remove-public && rollup -c ./rollup.config-serve.js -w",
     "remove-public": "rimraf ./public/bundle.*",
-    "build": "yarn lint:types &&",
+    "build": "yarn check-types &&",
     "lint": "eslint '**/*.{ts,tsx}'",
     "lint:fix": "yarn lint -- --fix",
-    "lint:types": "tsc --noEmit",
     "prepare": "husky install",
     "prettier:fix": "prettier --write",
     "check-types": "tsc ./src/db.ts --noEmit"

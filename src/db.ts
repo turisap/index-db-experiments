@@ -139,7 +139,14 @@ class IndexDBController<Stores> {
         }
     }
 
-    // @TODO@ all these three functions are very similar. it might need to be refactored
+    private handleRequest<StoreName extends TKeys<Stores>>(
+        dbRequest: IDBRequest<IDBValidKey> | IDBRequest<Stores[StoreName]> | IDBRequest<Array<Stores[StoreName]>>,
+        postponedRequest: TPossibleRequests<StoreName, Stores>,
+    ) {
+        dbRequest.onsuccess = () => postponedRequest.resolve(dbRequest.result as any);
+        dbRequest.onerror = postponedRequest.reject;
+    }
+
     private processAddValue<StoreName extends TKeys<Stores>>(
         postponedRequest: TPostponedAddValueRequest<StoreName, Stores>,
     ) {
@@ -147,8 +154,7 @@ class IndexDBController<Stores> {
             const objectStore = this.getStore(postponedRequest.store, "readwrite");
             const request = objectStore.add(postponedRequest.value);
 
-            request.onsuccess = () => postponedRequest.resolve(Number(request.result));
-            request.onerror = postponedRequest.reject;
+            this.handleRequest(request, postponedRequest);
         } catch (e) {
             postponedRequest.reject(e);
             error(e);
@@ -162,8 +168,7 @@ class IndexDBController<Stores> {
             const objectStore = this.getStore<StoreName>(postponedRequest.store, "readonly");
             const request = objectStore.get(postponedRequest.id);
 
-            request.onsuccess = () => postponedRequest.resolve(request.result);
-            request.onerror = postponedRequest.reject;
+            this.handleRequest(request, postponedRequest);
         } catch (e) {
             postponedRequest.reject(e);
             error(e);
@@ -177,8 +182,7 @@ class IndexDBController<Stores> {
             const objectStore = this.getStore<StoreName>(postponedRequest.store, "readonly");
             const request = objectStore.getAll(postponedRequest.range);
 
-            request.onsuccess = () => postponedRequest.resolve(request.result);
-            request.onerror = postponedRequest.reject;
+            this.handleRequest(request, postponedRequest);
         } catch (e) {
             postponedRequest.reject(e);
             error(e);
