@@ -2,7 +2,7 @@ export type TStoreKeys<S> = Extract<keyof S, string>;
 
 export type ValueOf<T> = T[keyof T];
 
-export type TStoreValue<StoreName, StoresObject> = StoreName extends TStoreKeys<StoresObject> ? StoresObject[StoreName] : any;
+export type TStoreValue<StoreName, StoreShape> = StoreName extends TStoreKeys<StoreShape> ? StoreShape[StoreName] : any;
 
 export type TReject = {
     reject: (reason?: any) => void;
@@ -20,37 +20,46 @@ export interface IDBStoreConfig {
     params: IDBObjectStoreParameters;
 }
 
-export type TPostponedByIdRequest<Store, StoresObject> = TReject & {
-    store: Store;
+export enum EOperations {
+    getOne = "getOne",
+    addOne = "addOne",
+    getAll = "getAll",
+}
+
+export type TPostponedByIdRequest<StoreName, StoreShape> = TReject & {
+    kind: EOperations;
+    store: StoreName;
     id: number;
-    resolve: (value: TStoreValue<Store, StoresObject>) => void;
+    resolve: (value: TStoreValue<StoreName, StoreShape>) => void;
 };
 
-export type TPostponedAddValueRequest<Store, StoresObject> = TReject & {
-    store: Store;
-    value: TStoreValue<Store, StoresObject>;
+export type TPostponedAddValueRequest<StoreName, StoreShape> = TReject & {
+    kind: EOperations;
+    store: StoreName;
+    value: TStoreValue<StoreName, StoreShape>;
     resolve: (id: number) => void;
 };
 
-export type TPostponedGetAllRequest<Store, StoresObject> = TReject & {
-    store: Store;
+export type TPostponedGetAllRequest<StoreName, StoreShape> = TReject & {
+    kind: EOperations;
+    store: StoreName;
     range?: IDBKeyRange;
-    resolve: (value: Array<TStoreValue<Store, StoresObject>>) => void;
+    resolve: (value: Array<TStoreValue<StoreName, StoreShape>>) => void;
 };
 
-export type TStackSet<PostponedRequest> = {
-    postponedRequests: Array<PostponedRequest>;
-    processFn: (value: PostponedRequest) => void;
+export type TStackMap<StoreName, StoreShape> = {
+    addOne: {
+        readonly requests: Array<TPostponedAddValueRequest<StoreName, StoreShape>>;
+    };
+    getOne: {
+        readonly requests: Array<TPostponedByIdRequest<StoreName, StoreShape>>;
+    };
+    getAll: {
+        readonly requests: Array<TPostponedGetAllRequest<StoreName, StoreShape>>;
+    };
 };
 
-type TAddOneStackSet<Store, StoresObject> = TStackSet<TPostponedAddValueRequest<Store, StoresObject>>;
-
-type TGetOneStackSet<Store, StoresObject> = TStackSet<TPostponedByIdRequest<Store, StoresObject>>;
-
-type TGetAllStackSet<Store, StoresObject> = TStackSet<TPostponedGetAllRequest<Store, StoresObject>>;
-
-export type TStackMap<Store, StoresObject> = {
-    addOne: TAddOneStackSet<Store, StoresObject>;
-    getOne: TGetOneStackSet<Store, StoresObject>;
-    getAll: TGetAllStackSet<Store, StoresObject>;
-};
+export type TPossibleRequests<StoreName, StoreShape> =
+    | TPostponedByIdRequest<StoreName, StoreShape>
+    | TPostponedAddValueRequest<StoreName, StoreShape>
+    | TPostponedGetAllRequest<StoreName, StoreShape>;

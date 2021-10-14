@@ -4,6 +4,7 @@ import { IndexDBController } from "./db";
 
 interface IStore {
     users: { name: string; email: string };
+    books: { title: string };
 }
 
 const dbController = new IndexDBController<IStore>({
@@ -19,7 +20,7 @@ const dbController = new IndexDBController<IStore>({
 function App() {
     useEffect(() => {
         dbController
-            .getById<"users">("users", 1)
+            .getById("users", 1)
             .then((resp) => console.log("rrr", resp))
             .catch((err) => {
                 alert("oh no");
@@ -27,7 +28,7 @@ function App() {
             });
 
         dbController
-            .addValue<"users">("users", {
+            .addValue("users", {
                 name: "Vova IVANOV",
                 email: "TRATAT",
             })
@@ -35,7 +36,7 @@ function App() {
             .catch(console.error);
 
         dbController
-            .getAllValues<"users">("users")
+            .getAllValues("users")
             .then((resp) => console.log("all", resp))
             .catch((err) => {
                 alert("oh");

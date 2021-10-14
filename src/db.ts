@@ -1,6 +1,8 @@
 import {
+    EOperations,
     IDBConfig,
     IDBStoreConfig,
+    TPossibleRequests,
     TPostponedAddValueRequest,
     TPostponedByIdRequest,
     TPostponedGetAllRequest,
@@ -20,16 +22,13 @@ class IndexDBController<Stores> {
 
     private readonly stackMap: TStackMap<any, Stores> = {
         addOne: {
-            postponedRequests: [],
-            processFn: this.processAddValue.bind(this),
+            requests: [],
         },
         getOne: {
-            postponedRequests: [],
-            processFn: this.processGettingValueById.bind(this),
+            requests: [],
         },
         getAll: {
-            postponedRequests: [],
-            processFn: this.processGetAllValues.bind(this),
+            requests: [],
         },
     };
 
@@ -80,9 +79,30 @@ class IndexDBController<Stores> {
     }
 
     private processStacksOnConnect() {
-        Object.values(this.stackMap).forEach((mapSet) => {
-            mapSet.postponedRequests.forEach((req) => mapSet.processFn(req as any));
+        Object.values(this.stackMap).forEach((operationSet) => {
+            operationSet.requests.forEach((request) => {
+                const processFn = this.getProcessFn(request);
+
+                processFn(request);
+            });
         });
+    }
+
+    private getProcessFn(req: TPossibleRequests<any, Stores>) {
+        switch (req.kind) {
+            case EOperations.addOne:
+                return this.processAddValue.bind(this);
+            case EOperations.getOne:
+                return this.processGettingValueById.bind(this);
+            case EOperations.getAll:
+                return this.processGetAllValues.bind(this);
+            // this is a check if we miss newly added operations
+            // https://www.typescriptlang.org/docs/handbook/2/narrowing.html#exhaustiveness-checking
+            default:
+                const _exhaustiveCheck: never = req.kind;
+
+                return _exhaustiveCheck;
+        }
     }
 
     private onUpgradeNeeded(event: Event) {
@@ -108,6 +128,7 @@ class IndexDBController<Stores> {
 
     private getStore<StoreName extends TStoreKeys<Stores>>(store: StoreName, mode?: IDBTransactionMode) {
         if (this.db) {
+            console.log(store);
             const transaction = this.db.transaction(store, mode);
 
             return transaction.objectStore(store);
@@ -159,37 +180,37 @@ class IndexDBController<Stores> {
     // @TODO these three are also kind of the same
     public addValue<StoreName extends TStoreKeys<Stores>>(store: StoreName, value: TStoreValue<StoreName, Stores>): Promise<number> {
         return new Promise((resolve, reject) => {
-            const requestPayload = { store, value, resolve, reject };
+            const requestPayload = { store, value, resolve, reject, kind: EOperations.addOne };
 
             if (this.db) {
                 return this.processAddValue<StoreName>(requestPayload);
             }
 
-            this.stackMap["addOne"].postponedRequests.push(requestPayload);
+            this.stackMap[EOperations.addOne].requests.push(requestPayload);
         });
     }
 
     public getById<StoreName extends TStoreKeys<Stores>>(store: StoreName, id: number): Promise<Stores[StoreName]> {
         return new Promise((resolve, reject) => {
-            const requestPayload = { store, id, resolve, reject };
+            const requestPayload = { store, id, resolve, reject, kind: EOperations.getOne };
 
             if (this.db) {
                 return this.processGettingValueById<StoreName>(requestPayload);
             }
 
-            this.stackMap["getOne"].postponedRequests.push(requestPayload);
+            this.stackMap[EOperations.getOne].requests.push(requestPayload);
         });
     }
 
     public getAllValues<StoreName extends TStoreKeys<Stores>>(store: StoreName, range?: IDBKeyRange): Promise<Array<Stores[StoreName]>> {
         return new Promise((resolve, reject) => {
-            const requestPayload = { store, range, resolve, reject };
+            const requestPayload = { store, range, resolve, reject, kind: EOperations.getAll };
 
             if (this.db) {
                 return this.processGetAllValues<StoreName>(requestPayload);
             }
 
-            this.stackMap["getAll"].postponedRequests.push(requestPayload);
+            this.stackMap[EOperations.getAll].requests.push(requestPayload);
         });
     }
 }
