@@ -20,28 +20,22 @@ export interface IDBStoreConfig {
     params: IDBObjectStoreParameters;
 }
 
-export enum EOperations {
-    getOne = "getOne",
-    addOne = "addOne",
-    getAll = "getAll",
-}
-
 export type TPostponedByIdRequest<StoreName, StoreShape> = TReject & {
-    kind: EOperations;
+    kind: "getOne";
     store: StoreName;
     id: number;
     resolve: (value: TStoreValue<StoreName, StoreShape>) => void;
 };
 
 export type TPostponedAddValueRequest<StoreName, StoreShape> = TReject & {
-    kind: EOperations;
+    kind: "addOne";
     store: StoreName;
     value: TStoreValue<StoreName, StoreShape>;
     resolve: (id: number) => void;
 };
 
 export type TPostponedGetAllRequest<StoreName, StoreShape> = TReject & {
-    kind: EOperations;
+    kind: "getAll";
     store: StoreName;
     range?: IDBKeyRange;
     resolve: (value: Array<TStoreValue<StoreName, StoreShape>>) => void;
@@ -63,3 +57,9 @@ export type TPossibleRequests<StoreName, StoreShape> =
     | TPostponedByIdRequest<StoreName, StoreShape>
     | TPostponedAddValueRequest<StoreName, StoreShape>
     | TPostponedGetAllRequest<StoreName, StoreShape>;
+
+export type TProcessFunctions<StoreName, StoreShape> = {
+    addOne: (request: TPostponedAddValueRequest<StoreName, StoreShape>) => void;
+    getOne: (request: TPostponedByIdRequest<StoreName, StoreShape>) => void;
+    getAll: (request: TPostponedGetAllRequest<StoreName, StoreShape>) => void;
+};

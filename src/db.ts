@@ -1,11 +1,11 @@
 import {
-    EOperations,
     IDBConfig,
     IDBStoreConfig,
     TPossibleRequests,
     TPostponedAddValueRequest,
     TPostponedByIdRequest,
     TPostponedGetAllRequest,
+    TProcessFunctions,
     TStackMap,
     TStoreKeys,
     TStoreValue,
@@ -14,6 +14,7 @@ import { error, info, warn } from "./utils";
 
 // @TODO build by rollup
 // @TODO yarn2 pnp
+// @TODO add semver
 class IndexDBController<Stores> {
     private request: IDBOpenDBRequest | null = null;
     private db: IDBDatabase | null = null;
@@ -88,18 +89,18 @@ class IndexDBController<Stores> {
         });
     }
 
-    private getProcessFn(req: TPossibleRequests<any, Stores>) {
+    private getProcessFn<Request extends TPossibleRequests<any, Stores>>(req: Request): TProcessFunctions<any, Stores>[Request["store"]] {
         switch (req.kind) {
-            case EOperations.addOne:
+            case "addOne":
                 return this.processAddValue.bind(this);
-            case EOperations.getOne:
+            case "getOne":
                 return this.processGettingValueById.bind(this);
-            case EOperations.getAll:
+            case "getAll":
                 return this.processGetAllValues.bind(this);
             // this is a check if we miss newly added operations
             // https://www.typescriptlang.org/docs/handbook/2/narrowing.html#exhaustiveness-checking
             default:
-                const _exhaustiveCheck: never = req.kind;
+                const _exhaustiveCheck: never = req;
 
                 return _exhaustiveCheck;
         }
@@ -128,7 +129,6 @@ class IndexDBController<Stores> {
 
     private getStore<StoreName extends TStoreKeys<Stores>>(store: StoreName, mode?: IDBTransactionMode) {
         if (this.db) {
-            console.log(store);
             const transaction = this.db.transaction(store, mode);
 
             return transaction.objectStore(store);
@@ -180,37 +180,37 @@ class IndexDBController<Stores> {
     // @TODO these three are also kind of the same
     public addValue<StoreName extends TStoreKeys<Stores>>(store: StoreName, value: TStoreValue<StoreName, Stores>): Promise<number> {
         return new Promise((resolve, reject) => {
-            const requestPayload = { store, value, resolve, reject, kind: EOperations.addOne };
+            const requestPayload = { store, value, resolve, reject, kind: "addOne" as const };
 
             if (this.db) {
                 return this.processAddValue<StoreName>(requestPayload);
             }
 
-            this.stackMap[EOperations.addOne].requests.push(requestPayload);
+            this.stackMap["addOne"].requests.push(requestPayload);
         });
     }
 
     public getById<StoreName extends TStoreKeys<Stores>>(store: StoreName, id: number): Promise<Stores[StoreName]> {
         return new Promise((resolve, reject) => {
-            const requestPayload = { store, id, resolve, reject, kind: EOperations.getOne };
+            const requestPayload = { store, id, resolve, reject, kind: "getOne" as const };
 
             if (this.db) {
                 return this.processGettingValueById<StoreName>(requestPayload);
             }
 
-            this.stackMap[EOperations.getOne].requests.push(requestPayload);
+            this.stackMap["getOne"].requests.push(requestPayload);
         });
     }
 
     public getAllValues<StoreName extends TStoreKeys<Stores>>(store: StoreName, range?: IDBKeyRange): Promise<Array<Stores[StoreName]>> {
         return new Promise((resolve, reject) => {
-            const requestPayload = { store, range, resolve, reject, kind: EOperations.getAll };
+            const requestPayload = { store, range, resolve, reject, kind: "getAll" as const };
 
             if (this.db) {
                 return this.processGetAllValues<StoreName>(requestPayload);
             }
 
-            this.stackMap[EOperations.getAll].requests.push(requestPayload);
+            this.stackMap["getAll"].requests.push(requestPayload);
         });
     }
 }
