@@ -1,13 +1,13 @@
 import {
     IDBConfig,
     IDBStoreConfig,
+    TKeys,
     TPossibleRequests,
     TPostponedAddValueRequest,
     TPostponedByIdRequest,
     TPostponedGetAllRequest,
     TProcessFunctions,
     TStackMap,
-    TStoreKeys,
     TStoreValue,
 } from "./types";
 import { error, info, warn } from "./utils";
@@ -89,7 +89,9 @@ class IndexDBController<Stores> {
         });
     }
 
-    private getProcessFn<Request extends TPossibleRequests<any, Stores>>(req: Request): TProcessFunctions<any, Stores>[Request["store"]] {
+    private getProcessFn<Request extends TPossibleRequests<any, Stores>>(
+        req: Request,
+    ): TProcessFunctions<any, Stores>[Request["store"]] {
         switch (req.kind) {
             case "addOne":
                 return this.processAddValue.bind(this);
@@ -127,7 +129,7 @@ class IndexDBController<Stores> {
         });
     }
 
-    private getStore<StoreName extends TStoreKeys<Stores>>(store: StoreName, mode?: IDBTransactionMode) {
+    private getStore<StoreName extends TKeys<Stores>>(store: StoreName, mode?: IDBTransactionMode) {
         if (this.db) {
             const transaction = this.db.transaction(store, mode);
 
@@ -138,7 +140,9 @@ class IndexDBController<Stores> {
     }
 
     // @TODO@ all these three functions are very similar. it might need to be refactored
-    private processAddValue<StoreName extends TStoreKeys<Stores>>(postponedRequest: TPostponedAddValueRequest<StoreName, Stores>) {
+    private processAddValue<StoreName extends TKeys<Stores>>(
+        postponedRequest: TPostponedAddValueRequest<StoreName, Stores>,
+    ) {
         try {
             const objectStore = this.getStore(postponedRequest.store, "readwrite");
             const request = objectStore.add(postponedRequest.value);
@@ -151,7 +155,9 @@ class IndexDBController<Stores> {
         }
     }
 
-    private processGettingValueById<StoreName extends TStoreKeys<Stores>>(postponedRequest: TPostponedByIdRequest<StoreName, Stores>) {
+    private processGettingValueById<StoreName extends TKeys<Stores>>(
+        postponedRequest: TPostponedByIdRequest<StoreName, Stores>,
+    ) {
         try {
             const objectStore = this.getStore<StoreName>(postponedRequest.store, "readonly");
             const request = objectStore.get(postponedRequest.id);
@@ -164,7 +170,9 @@ class IndexDBController<Stores> {
         }
     }
 
-    private processGetAllValues<StoreName extends TStoreKeys<Stores>>(postponedRequest: TPostponedGetAllRequest<StoreName, Stores>) {
+    private processGetAllValues<StoreName extends TKeys<Stores>>(
+        postponedRequest: TPostponedGetAllRequest<StoreName, Stores>,
+    ) {
         try {
             const objectStore = this.getStore<StoreName>(postponedRequest.store, "readonly");
             const request = objectStore.getAll(postponedRequest.range);
@@ -177,8 +185,10 @@ class IndexDBController<Stores> {
         }
     }
 
-    // @TODO these three are also kind of the same
-    public addValue<StoreName extends TStoreKeys<Stores>>(store: StoreName, value: TStoreValue<StoreName, Stores>): Promise<number> {
+    public addValue<StoreName extends TKeys<Stores>>(
+        store: StoreName,
+        value: TStoreValue<StoreName, Stores>,
+    ): Promise<number> {
         return new Promise((resolve, reject) => {
             const requestPayload = { store, value, resolve, reject, kind: "addOne" as const };
 
@@ -190,7 +200,7 @@ class IndexDBController<Stores> {
         });
     }
 
-    public getById<StoreName extends TStoreKeys<Stores>>(store: StoreName, id: number): Promise<Stores[StoreName]> {
+    public getById<StoreName extends TKeys<Stores>>(store: StoreName, id: number): Promise<Stores[StoreName]> {
         return new Promise((resolve, reject) => {
             const requestPayload = { store, id, resolve, reject, kind: "getOne" as const };
 
@@ -202,7 +212,10 @@ class IndexDBController<Stores> {
         });
     }
 
-    public getAllValues<StoreName extends TStoreKeys<Stores>>(store: StoreName, range?: IDBKeyRange): Promise<Array<Stores[StoreName]>> {
+    public getAllValues<StoreName extends TKeys<Stores>>(
+        store: StoreName,
+        range?: IDBKeyRange,
+    ): Promise<Array<Stores[StoreName]>> {
         return new Promise((resolve, reject) => {
             const requestPayload = { store, range, resolve, reject, kind: "getAll" as const };
 

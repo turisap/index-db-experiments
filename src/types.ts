@@ -1,8 +1,8 @@
-export type TStoreKeys<S> = Extract<keyof S, string>;
+export type TKeys<S> = Extract<keyof S, string>;
 
 export type ValueOf<T> = T[keyof T];
 
-export type TStoreValue<StoreName, StoreShape> = StoreName extends TStoreKeys<StoreShape> ? StoreShape[StoreName] : any;
+export type TStoreValue<StoreName, StoreShape> = StoreName extends TKeys<StoreShape> ? StoreShape[StoreName] : any;
 
 export type TReject = {
     reject: (reason?: any) => void;
@@ -63,3 +63,34 @@ export type TProcessFunctions<StoreName, StoreShape> = {
     getOne: (request: TPostponedByIdRequest<StoreName, StoreShape>) => void;
     getAll: (request: TPostponedGetAllRequest<StoreName, StoreShape>) => void;
 };
+
+export type TAddOneQueryConfig<StoreName, StoreShape> = {
+    store: StoreName;
+    value: TStoreValue<StoreName, StoreShape>;
+};
+
+export type TGetOneQueryConfig<StoreName> = {
+    store: StoreName;
+    id: number;
+};
+
+export type TGetAllQueryConfig<StoreName> = {
+    store: StoreName;
+    range?: IDBKeyRange;
+};
+
+export type TExecuteQueryConfig<StoreName, StoreShape> =
+    | TAddOneQueryConfig<StoreName, StoreShape>
+    | TGetOneQueryConfig<StoreName>
+    | TGetAllQueryConfig<StoreName>;
+
+export type TExecuteQueryReturn<StoreName extends TKeys<StoreShape>, StoreShape> =
+    | {
+          addOne: Promise<number>;
+      }
+    | {
+          getById: Promise<StoreShape[StoreName]>;
+      }
+    | {
+          getAll: Promise<Array<StoreShape[StoreName]>>;
+      };
