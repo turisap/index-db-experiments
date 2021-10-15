@@ -2,9 +2,19 @@
   "name": "my-app",
   "version": "0.1.0",
   "private": true,
-  "author": "turisap",
+  "author": "Kirill Shakirov turisap",
   "dependencies": {
     "prettier": "^2.4.1"
+  },
+  "source": "src/db.ts",
+  "license": "MIT",
+  "browser": true,
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.cjs.js"
+    }
   },
   "devDependencies": {
     "@babel/plugin-transform-react-jsx": "^7.14.9",
@@ -32,7 +42,11 @@
     "rimraf": "^3.0.2",
     "rollup": "^2.58.0",
     "rollup-plugin-livereload": "^2.0.5",
+    "rollup-plugin-peer-deps-external": "^2.2.4",
     "rollup-plugin-serve": "^1.1.0",
+    "rollup-plugin-sourcemaps": "^0.6.3",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript2": "^0.30.0",
     "typescript": "^4.4.3"
   },
   "lint-staged": {
@@ -48,14 +62,19 @@
     }
   },
   "scripts": {
+    "build:dist": "rollup -c ./scripts/rollup.config.js",
+    "clean": "rimraf dist",
+    "prebuild": "yarn clean",
     "start": "yarn remove-public && rollup -c ./rollup.config-serve.js -w",
     "remove-public": "rimraf ./public/bundle.*",
-    "build": "yarn check-types &&",
+    "build": "yarn defenitions && prettier ./dist --write && eslint './dist/*.d.ts' --fix && yarn build:dist",
     "lint": "eslint '**/*.{ts,tsx}'",
     "lint:fix": "yarn lint -- --fix",
     "prepare": "husky install",
     "prettier:fix": "prettier --write",
-    "check-types": "tsc ./src/db.ts --noEmit"
+    "check-types": "tsc ./src/db.ts --noEmit",
+    "defenitions": "tsc ./src/db.ts --declaration --declarationDir ./dist --outDir temp",
+    "postdefenitions": "rimraf temp"
   },
   "eslintConfig": {}
 }

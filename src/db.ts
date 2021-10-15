@@ -14,7 +14,6 @@ import { error, info, warn } from "./utils";
 
 // @TODO build by rollup
 // @TODO yarn2 pnp
-// @TODO add semver
 class IndexDBController<Stores> {
     private request: IDBOpenDBRequest | null = null;
     private db: IDBDatabase | null = null;
