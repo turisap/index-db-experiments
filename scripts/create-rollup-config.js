@@ -1,5 +1,3 @@
-import commonjs from "@rollup/plugin-commonjs";
-import external from "rollup-plugin-peer-deps-external";
 import sourcemaps from "rollup-plugin-sourcemaps";
 import { terser } from "rollup-plugin-terser";
 import typescript from "rollup-plugin-typescript2";
@@ -21,15 +19,10 @@ export function createRollupConfig(options, callback) {
             exports: "named",
         },
         plugins: [
-            external(),
             typescript({
                 tsconfig: options.tsconfig,
                 clean: true,
             }),
-            options.format === "umd" &&
-                commonjs({
-                    include: /\/node_modules\//,
-                }),
             sourcemaps(),
             options.format !== "esm" &&
                 terser({
