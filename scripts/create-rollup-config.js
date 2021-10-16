@@ -4,6 +4,8 @@ import sourcemaps from "rollup-plugin-sourcemaps";
 import { terser } from "rollup-plugin-terser";
 import typescript from "rollup-plugin-typescript2";
 
+// @TODO how does all of this work?
+
 export function createRollupConfig(options, callback) {
     const name = options.name;
     const outputName = "dist/" + [name, options.format, "js"].join(".");

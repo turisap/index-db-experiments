@@ -12,7 +12,6 @@ import {
 } from "./types";
 import { error, info, warn } from "./utils";
 
-// @TODO build by rollup
 // @TODO yarn2 pnp
 class IndexDBController<Stores> {
     private request: IDBOpenDBRequest | null = null;
