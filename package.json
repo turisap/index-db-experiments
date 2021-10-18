@@ -1,80 +1,80 @@
 {
-  "name": "my-app",
-  "version": "0.1.0",
-  "private": true,
-  "author": "Kirill Shakirov turisap",
-  "dependencies": {
-    "prettier": "^2.4.1"
-  },
-  "source": "src/db.ts",
-  "license": "MIT",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/db.d.ts",
-  "sideEffects": false,
-  "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "import": "./dist/index.esm.js",
-      "require": "./dist/index.cjs.js"
+    "name": "my-app",
+    "version": "0.1.0",
+    "private": true,
+    "author": "Kirill Shakirov turisap",
+    "dependencies": {
+        "prettier": "^2.4.1"
+    },
+    "source": "src/db.ts",
+    "license": "MIT",
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.esm.js",
+    "types": "dist/db.d.ts",
+    "sideEffects": false,
+    "exports": {
+        "./package.json": "./package.json",
+        ".": {
+            "import": "./dist/index.esm.js",
+            "require": "./dist/index.cjs.js"
+        }
+    },
+    "devDependencies": {
+        "@babel/plugin-transform-react-jsx": "^7.14.9",
+        "@babel/preset-react": "^7.14.5",
+        "@babel/preset-typescript": "^7.15.0",
+        "@rollup/plugin-babel": "^5.3.0",
+        "@rollup/plugin-node-resolve": "^13.0.5",
+        "@rollup/plugin-replace": "^3.0.0",
+        "@rollup/plugin-typescript": "^8.2.5",
+        "@types/react": "^17.0.27",
+        "@types/react-dom": "^17.0.9",
+        "@typescript-eslint/eslint-plugin": "^4.33.0",
+        "@typescript-eslint/parser": "^4.33.0",
+        "eslint": "^7.32.0",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-plugin-prettier": "^4.0.0",
+        "eslint-plugin-react": "^7.26.1",
+        "eslint-plugin-react-hooks": "^4.2.0",
+        "eslint-plugin-simple-import-sort": "^7.0.0",
+        "husky": "^7.0.2",
+        "lint-staged": "^11.2.0",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2",
+        "rimraf": "^3.0.2",
+        "rollup": "^2.58.0",
+        "rollup-plugin-livereload": "^2.0.5",
+        "rollup-plugin-serve": "^1.1.0",
+        "rollup-plugin-sourcemaps": "^0.6.3",
+        "rollup-plugin-terser": "^7.0.2",
+        "rollup-plugin-typescript2": "^0.30.0",
+        "typescript": "^4.4.3"
+    },
+    "lint-staged": {
+        "*.{ts,tsx}": [
+            "yarn lint:fix",
+            "yarn prettier:fix"
+        ],
+        "./src/db.ts": "yarn check-types"
+    },
+    "husky": {
+        "hooks": {
+            "pre-commit": "lint-staged"
+        }
+    },
+    "scripts": {
+        "build:dist": "rollup -c ./scripts/rollup.config.js",
+        "clean": "rimraf dist",
+        "prebuild": "yarn clean",
+        "start": "yarn remove-public && rollup -c ./rollup.config-serve.js -w",
+        "remove-public": "rimraf ./public/bundle.*",
+        "build": "yarn defenitions && prettier ./dist --write && eslint './dist/*.d.ts' --fix && yarn build:dist",
+        "lint": "eslint './src/*.{ts,tsx}'",
+        "lint:fix": "yarn lint --fix",
+        "prepare": "husky install",
+        "prettier:fix": "prettier --write",
+        "check-types": "tsc ./src/db.ts --noEmit",
+        "defenitions": "tsc ./src/db.ts --declaration --declarationDir ./dist --outDir temp",
+        "postdefenitions": "rimraf temp"
     }
-  },
-  "devDependencies": {
-    "@babel/plugin-transform-react-jsx": "^7.14.9",
-    "@babel/preset-react": "^7.14.5",
-    "@babel/preset-typescript": "^7.15.0",
-    "@rollup/plugin-babel": "^5.3.0",
-    "@rollup/plugin-node-resolve": "^13.0.5",
-    "@rollup/plugin-replace": "^3.0.0",
-    "@rollup/plugin-typescript": "^8.2.5",
-    "@types/react": "^17.0.27",
-    "@types/react-dom": "^17.0.9",
-    "@typescript-eslint/eslint-plugin": "^4.33.0",
-    "@typescript-eslint/parser": "^4.33.0",
-    "eslint": "^7.32.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin-react": "^7.26.1",
-    "eslint-plugin-react-hooks": "^4.2.0",
-    "eslint-plugin-simple-import-sort": "^7.0.0",
-    "husky": "^7.0.2",
-    "lint-staged": "^11.2.0",
-    "react": "^17.0.2",
-    "react-dom": "^17.0.2",
-    "rimraf": "^3.0.2",
-    "rollup": "^2.58.0",
-    "rollup-plugin-livereload": "^2.0.5",
-    "rollup-plugin-serve": "^1.1.0",
-    "rollup-plugin-sourcemaps": "^0.6.3",
-    "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-typescript2": "^0.30.0",
-    "typescript": "^4.4.3"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "yarn lint:fix",
-      "yarn prettier:fix"
-    ],
-    "./src/db.ts": "yarn check-types"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "scripts": {
-    "build:dist": "rollup -c ./scripts/rollup.config.js",
-    "clean": "rimraf dist",
-    "prebuild": "yarn clean",
-    "start": "yarn remove-public && rollup -c ./rollup.config-serve.js -w",
-    "remove-public": "rimraf ./public/bundle.*",
-    "build": "yarn defenitions && prettier ./dist --write && eslint './dist/*.d.ts' --fix && yarn build:dist",
-    "lint": "eslint '**/*.{ts,tsx}'",
-    "lint:fix": "yarn lint -- --fix",
-    "prepare": "husky install",
-    "prettier:fix": "prettier --write",
-    "check-types": "tsc ./src/db.ts --noEmit",
-    "defenitions": "tsc ./src/db.ts --declaration --declarationDir ./dist --outDir temp",
-    "postdefenitions": "rimraf temp"
-  }
 }
